@@ -256,7 +256,7 @@ public class BeeWorldCreator implements Keyed {
 
         // Let's clone files on another thread
         CompletableFuture<WorldCreator> worldCompletableFuture = new CompletableFuture<>();
-        Bukkit.getScheduler().runTaskAsynchronously(SkBee.getPlugin(), () -> {
+        Bukkit.getAsyncScheduler().runNow(SkBee.getPlugin(), (ignored) -> {
             File cloneDirectory = new File(worldContainer, cloneName);
             if (worldDirectorToClone.exists()) {
                 try {
@@ -269,10 +269,10 @@ public class BeeWorldCreator implements Keyed {
                         }
                     }
                     WorldCreator creator = getWorldCreator(cloneName, this.key);
-                    Bukkit.getScheduler().runTaskLater(SkBee.getPlugin(), () -> {
+                    Bukkit.getGlobalRegionScheduler().runDelayed(SkBee.getPlugin(), (ignored2) -> {
                         // Let's head back to the main thread
                         worldCompletableFuture.complete(creator);
-                    }, 0);
+                    }, 1);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

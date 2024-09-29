@@ -145,7 +145,7 @@ public class AddonLoader {
 
         if (this.config.SETTINGS_DEBUG) {
             // Print names of ClassInfos with missing lang entry
-            Bukkit.getScheduler().runTaskLater(this.plugin, () -> Classes.getClassInfos().forEach(classInfo -> {
+            Bukkit.getGlobalRegionScheduler().runDelayed(this.plugin, (ignored) -> Classes.getClassInfos().forEach(classInfo -> {
                 Noun name = classInfo.getName();
                 if (name.toString().contains("types.")) {
                     Util.log("ClassInfo missing lang entry for: &c%s", name);

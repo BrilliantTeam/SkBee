@@ -20,8 +20,7 @@ import java.util.List;
 @Name("Task - Cancel Task")
 @Description({"Stop tasks.",
     "`stop all tasks` = Will stop all currently running tasks created with a task section.",
-    "`stop current task` = Will stop the task section this effect is in.",
-    "`stop task with id` = Will stop any task from an ID."})
+    "`stop current task` = Will stop the task section this effect is in."})
 @Examples({"run 0 ticks later repeating every second:",
     "\tset {-id} to current task id",
     "\tadd 1 to {_a}",
@@ -29,18 +28,12 @@ import java.util.List;
     "\t\tstop current task",
     "",
     "on unload:",
-    "\tstop all tasks",
-    "",
-    "on break:",
-    "\tstop task with id {-id}"})
+    "\tstop all tasks"})
 @Since("3.3.0")
 public class EffTaskStop extends Effect {
-
-    private static final BukkitScheduler SCHEDULER = Bukkit.getScheduler();
-
     static {
         Skript.registerEffect(EffTaskStop.class,
-            "(stop|cancel) all tasks", "(stop|cancel) current task", "(stop|cancel) task[s] with id[s] %numbers%");
+            "(stop|cancel) all tasks", "(stop|cancel) current task");
     }
 
     private int pattern;
@@ -51,9 +44,7 @@ public class EffTaskStop extends Effect {
     @Override
     public boolean init(Expression<?>[] exprs, int matchedPattern, Kleenean isDelayed, ParseResult parseResult) {
         this.pattern = matchedPattern;
-        if (matchedPattern == 2) {
-            this.ids = (Expression<Number>) exprs[0];
-        } else if (matchedPattern == 1) {
+        if (matchedPattern == 1) {
             List<SecRunTaskLater> currentSections = getParser().getCurrentSections(SecRunTaskLater.class);
             if (currentSections.isEmpty()) {
                 Skript.error("'" + parseResult.expr + "' can only be used in a run task section.");
@@ -70,11 +61,6 @@ public class EffTaskStop extends Effect {
         switch (this.pattern) {
             case 0 -> SecRunTaskLater.cancelTasks();
             case 1 -> this.currentTask.stopCurrentTask();
-            case 2 -> {
-                for (Number id : this.ids.getArray(event)) {
-                    SCHEDULER.cancelTask(id.intValue());
-                }
-            }
         }
     }
 
@@ -82,7 +68,6 @@ public class EffTaskStop extends Effect {
     public @NotNull String toString(Event e, boolean d) {
         return switch (this.pattern) {
             case 1 -> "stop current task";
-            case 2 -> "stop task[s] with id[s] " + this.ids.toString(e, d);
             default -> "stop all tasks";
         };
     }

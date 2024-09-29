@@ -16,6 +16,7 @@ import ch.njol.skript.util.Timespan;
 import ch.njol.skript.variables.Variables;
 import ch.njol.util.Kleenean;
 import com.shanebeestudios.skbee.SkBee;
+import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bukkit.Bukkit;
 import org.bukkit.event.Event;
 import org.bukkit.plugin.Plugin;
@@ -25,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Name("Task - Run Task Later")
 @Description({"Run a task later. Similar to Skript's delay effect, with the difference being everything in the",
@@ -52,7 +54,8 @@ public class SecRunTaskLater extends Section {
     private static final Plugin PLUGIN = SkBee.getPlugin();
 
     public static void cancelTasks() {
-        Bukkit.getScheduler().cancelTasks(PLUGIN);
+        Bukkit.getGlobalRegionScheduler().cancelTasks(PLUGIN);
+        Bukkit.getAsyncScheduler().cancelTasks(PLUGIN);
     }
 
     static {
@@ -64,6 +67,7 @@ public class SecRunTaskLater extends Section {
     private Expression<Timespan> timespan;
     private Expression<Timespan> repeating;
     private Trigger trigger;
+    private ScheduledTask scheduledTask;
     private int currentTaskId;
 
     @SuppressWarnings({"NullableProblems", "unchecked"})
@@ -93,7 +97,7 @@ public class SecRunTaskLater extends Section {
             if (repeatingTimespan != null) repeat = repeatingTimespan.getTicks();
         }
 
-        BukkitScheduler scheduler = Bukkit.getScheduler();
+        // BukkitScheduler scheduler = Bukkit.getScheduler();
         Runnable runnable = () -> {
             Variables.setLocalVariables(event, localVars);
             assert first != null;
@@ -102,23 +106,23 @@ public class SecRunTaskLater extends Section {
             Variables.removeLocals(event);
         };
 
-        BukkitTask task;
+        ScheduledTask task;
         if (repeat > 0 && async) {
-            task = scheduler.runTaskTimerAsynchronously(PLUGIN, runnable, delay, repeat);
+            task = Bukkit.getAsyncScheduler().runAtFixedRate(PLUGIN, (ignored) -> runnable.run(), delay * 50, repeat * 50, TimeUnit.MILLISECONDS);
         } else if (repeat > 0) {
-            task = scheduler.runTaskTimer(PLUGIN, runnable, delay, repeat);
+            task = Bukkit.getGlobalRegionScheduler().runAtFixedRate(PLUGIN,  (ignored) -> runnable.run(), delay, repeat);
         } else if (async) {
-            task = scheduler.runTaskLaterAsynchronously(PLUGIN, runnable, delay);
+            task = Bukkit.getAsyncScheduler().runDelayed(PLUGIN, (ignored) -> runnable.run(), delay * 50, TimeUnit.MILLISECONDS);
         } else {
-            task = scheduler.runTaskLater(PLUGIN, runnable, delay);
+            task = Bukkit.getGlobalRegionScheduler().runDelayed(PLUGIN, (ignored) -> runnable.run(), delay);
         }
-        this.currentTaskId = task.getTaskId();
+        this.currentTaskId = task.hashCode();
         if (last != null) last.setNext(null);
         return super.walk(event, false);
     }
 
     public void stopCurrentTask() {
-        Bukkit.getScheduler().cancelTask(this.currentTaskId);
+        scheduledTask.cancel();
     }
 
     public int getCurrentTaskId() {

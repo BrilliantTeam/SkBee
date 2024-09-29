@@ -48,11 +48,11 @@ public class UpdateChecker implements Listener {
                 Player player = event.getPlayer();
                 if (!player.hasPermission("skbee.update.check")) return;
 
-                Bukkit.getScheduler().runTaskLater(UpdateChecker.this.plugin, () -> getUpdateVersion(true).thenApply(version -> {
+                player.getScheduler().runDelayed(UpdateChecker.this.plugin, (ignored) -> getUpdateVersion(true).thenApply(version -> {
                     Util.sendColMsg(player, "&7[&bSk&3Bee&7] update available: &a" + version);
                     Util.sendColMsg(player, "&7[&bSk&3Bee&7] download at &bhttps://github.com/ShaneBeee/SkBee/releases");
                     return true;
-                }), 30);
+                }), null, 30);
             }
         }, this.plugin);
     }
@@ -92,7 +92,7 @@ public class UpdateChecker implements Listener {
     private CompletableFuture<Version> getLatestReleaseVersion(boolean async) {
         CompletableFuture<Version> future = new CompletableFuture<>();
         if (async) {
-            Bukkit.getScheduler().runTaskAsynchronously(this.plugin, () -> {
+            Bukkit.getAsyncScheduler().runNow(this.plugin, (ignored) -> {
                 Version lastest = getLastestVersionFromGitHub();
                 if (lastest == null) future.cancel(true);
                 future.complete(lastest);

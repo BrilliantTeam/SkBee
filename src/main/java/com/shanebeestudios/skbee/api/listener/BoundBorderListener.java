@@ -109,14 +109,14 @@ public class BoundBorderListener implements Listener {
             private void onExitBed(PlayerBedLeaveEvent event) {
                 Player player = event.getPlayer();
                 Location from = event.getBed().getLocation();
-                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                player.getScheduler().runDelayed(plugin, (ignored) -> {
                     // Find player's new location after leaving bed
                     // have to add a delay as this isn't determinded in the event
                     Location to = player.getLocation();
                     if (preventBoundMovement(player, from, to)) {
                         player.teleport(from.clone().add(0, 1, 0));
                     }
-                }, 1);
+                }, null, 1);
             }
         }, plugin);
 
@@ -138,14 +138,14 @@ public class BoundBorderListener implements Listener {
             private void onDismount(EntityDismountEvent event) {
                 if (event.getEntity() instanceof Player player) {
                     Location from = event.getDismounted().getLocation().clone();
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    player.getScheduler().runDelayed(plugin, (ignored) -> {
                         Location to = player.getLocation();
                         if (preventBoundMovement(player, from, to)) {
                             from.setYaw(player.getLocation().getYaw());
                             from.setPitch(player.getLocation().getPitch());
                             player.teleport(from);
                         }
-                    }, 1);
+                    }, null, 1);
                 }
             }
         }, plugin);
@@ -168,14 +168,14 @@ public class BoundBorderListener implements Listener {
             private void onVehicleExit(VehicleExitEvent event) {
                 Location from = event.getVehicle().getLocation().clone();
                 if (event.getExited() instanceof Player player) {
-                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    player.getScheduler().runDelayed(plugin, (ignored) -> {
                         Location to = player.getLocation();
                         if (preventBoundMovement(player, from, to)) {
                             from.setYaw(player.getLocation().getYaw());
                             from.setPitch(player.getLocation().getPitch());
                             player.teleport(from);
                         }
-                    }, 1);
+                    }, null, 1);
                 }
             }
         }, plugin);
@@ -204,15 +204,17 @@ public class BoundBorderListener implements Listener {
             @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
             private void onVehicleDestroy(VehicleDestroyEvent event) {
                 Location from = event.getVehicle().getLocation().clone();
-                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                Bukkit.getRegionScheduler().runDelayed(plugin, from, (ignored) -> {
                     for (Entity passenger : event.getVehicle().getPassengers()) {
                         Location to = passenger.getLocation();
                         if (passenger instanceof Player player) {
-                            if (preventBoundMovement(player, from, to)) {
-                                from.setYaw(player.getLocation().getYaw());
-                                from.setPitch(player.getLocation().getPitch());
-                                player.teleport(from);
-                            }
+                            player.getScheduler().run(plugin, (ignored2) -> {
+                                if (preventBoundMovement(player, from, to)) {
+                                    from.setYaw(player.getLocation().getYaw());
+                                    from.setPitch(player.getLocation().getPitch());
+                                    player.teleport(from);
+                                }
+                            } , null);
                         }
                     }
                 }, 1);

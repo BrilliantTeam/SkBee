@@ -74,7 +74,7 @@ public class SkBee extends JavaPlugin {
             Util.log("&ehttps://github.com/ShaneBeee/SkBee/issues");
         }
 
-        new UpdateChecker(this);
+        // new UpdateChecker(this);
         Util.log("&aSuccessfully enabled v%s&7 in &b%.2f seconds", version, (float) (System.currentTimeMillis() - start) / 1000);
 
         // Load custom worlds if enabled in config
@@ -92,9 +92,9 @@ public class SkBee extends JavaPlugin {
     }
 
     private void loadMetrics() { //6719
-        Metrics metrics = new Metrics(this, 6719);
+        /*Metrics metrics = new Metrics(this, 6719);
         metrics.addCustomChart(new SimplePie("skript_version", () -> Skript.getVersion().toString()));
-        metrics.addCustomChart(new SimplePie("virtual_furnace", () -> String.valueOf(config.ELEMENTS_VIRTUAL_FURNACE)));
+        metrics.addCustomChart(new SimplePie("virtual_furnace", () -> String.valueOf(config.ELEMENTS_VIRTUAL_FURNACE)));*/
     }
 
     /**
